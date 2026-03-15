@@ -1,0 +1,72 @@
+Function JaroWinkler(s1 As String, s2 As String) As Double
+    Dim m As Double, t As Double
+    Dim s1_len As Integer, s2_len As Integer
+    Dim match_distance As Integer
+    Dim s1_matches() As Boolean
+    Dim s2_matches() As Boolean
+    Dim i As Integer, j As Integer
+    Dim start As Integer, finish As Integer
+    Dim prefix As Integer
+    Dim jw As Double
+    
+    s1 = LCase(Trim(s1))
+    s2 = LCase(Trim(s2))
+    
+    s1_len = Len(s1)
+    s2_len = Len(s2)
+    
+    If s1_len = 0 And s2_len = 0 Then
+        JaroWinkler = 1
+        Exit Function
+    End If
+    
+    match_distance = Application.WorksheetFunction.Max(s1_len, s2_len) \ 2 - 1
+    
+    ReDim s1_matches(1 To s1_len)
+    ReDim s2_matches(1 To s2_len)
+    
+    For i = 1 To s1_len
+        start = Application.WorksheetFunction.Max(1, i - match_distance)
+        finish = Application.WorksheetFunction.Min(i + match_distance, s2_len)
+        
+        For j = start To finish
+            If Not s2_matches(j) And Mid(s1, i, 1) = Mid(s2, j, 1) Then
+                s1_matches(i) = True
+                s2_matches(j) = True
+                m = m + 1
+                Exit For
+            End If
+        Next j
+    Next i
+    
+    If m = 0 Then
+        JaroWinkler = 0
+        Exit Function
+    End If
+    
+    j = 1
+    For i = 1 To s1_len
+        If s1_matches(i) Then
+            While Not s2_matches(j)
+                j = j + 1
+            Wend
+            If Mid(s1, i, 1) <> Mid(s2, j, 1) Then t = t + 1
+            j = j + 1
+        End If
+    Next i
+    
+    t = t / 2
+    
+    jw = ((m / s1_len) + (m / s2_len) + ((m - t) / m)) / 3
+    
+    prefix = 0
+    For i = 1 To Application.WorksheetFunction.Min(4, s1_len, s2_len)
+        If Mid(s1, i, 1) = Mid(s2, i, 1) Then
+            prefix = prefix + 1
+        Else
+            Exit For
+        End If
+    Next i
+    
+    JaroWinkler = jw + (prefix * 0.1 * (1 - jw))
+End Function
